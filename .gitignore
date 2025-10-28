@@ -34,3 +34,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# .gitignore
+
+# Docker Persistent Volumes
+# (These are created by 'docker-compose up' and owned by root)
+/qdrant-storage/
+/n8n-data/
+/flowise-data/
+/postgres-data/
+
+# Next.js / Node.js standard ignores
+/nextjs-cockpit/node_modules/
+/nextjs-cockpit/.next/
+/nextjs-cockpit/out/
+
+# Environment files
+# (NEVER commit these!)
+*.env
+*.env.local

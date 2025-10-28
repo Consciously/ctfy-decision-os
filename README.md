@@ -1,47 +1,102 @@
-ctfy-decision-osThis repository is the "Tracer-Project" for the Codetechify Decision-Lifecycle OS.The goal is to build and validate the core RAG-Backbone (the "Tracer") which consists of:VaultWell (Simulated): Hand-crafted JSON files representing the "Source of Truth".Storage: Convex (SoR Database) & Qdrant (Vector Store).Indexer (Write-Path): n8n workflows.Query-Engine (Read-Path): FlowiseAI chains.LLM Service: Ollama (running on host).Cockpit (Minimal): Next.js app.Project StructureThis is a "Level-0 Monorepo" (a single repo containing all project assets)./ctfy-decision-os
-|
-|-- docker-compose.yml       # Our project-specific services (Qdrant, n8n, etc.)
-|
-|-- /genesis-block/          # Hand-crafted JSON SoR files (Task 1.2)
-|
-|-- /nextjs-cockpit/         # The Next.js application
-|   |-- /convex/             # Convex schema and functions (Task 1.3)
-|   |-- package.json         # <-- We will modify the 'dev' script here
-|   |-- .env.local           # <-- Will contain Convex/Flowise keys
-|
-|-- /n8n-workflows/          # JSON exports of our n8n workflows
-|
-|-- /flowise-brains/         # JSON exports of our FlowiseAI chains
-|
-|-- /qdrant-storage/         # Persistent volume data
-|-- /n8n-data/               # Persistent volume data
-|-- /flowise-data/           # Persistent volume data
-|-- /postgres-data/          # Persistent volume data
-|
-`-- README.md                # This file
+# ctfy-decision-os
 
-PrerequisitesBefore you begin, ensure you have the following installed on your workstation:gitNode.js (v18+ recommended)pnpm (We will use pnpm for this project)Docker & Docker ComposeIt is also assumed you have a global Ollama service running on http://localhost:11434.Get Started: Step-by-Step1. Clone & Setup FoldersFirst, clone the repository and create the persistent storage directories.# Clone your repository
+This repository is the **Tracer Project** for the **Codetechify Decision-Lifecycle OS**.
+
+The goal is to build and validate the core **RAG-Backbone** (the “Tracer”), which consists of:
+
+- **VaultWell (Simulated):** Hand-crafted JSON files representing the “Source of Truth”.
+- **Storage:** Convex (SoR Database) & Qdrant (Vector Store).
+- **Indexer (Write-Path):** n8n workflows.
+- **Query Engine (Read-Path):** FlowiseAI chains.
+- **LLM Service:** Ollama (running on host).
+- **Cockpit (Minimal):** Next.js app.
+
+---
+
+## 🧱 Project Structure
+
+This is a **Level-0 Monorepo** (a single repo containing all project assets).
+
+```
+/ctfy-decision-os
+│
+├── docker-compose.yml        # Project-specific services (Qdrant, n8n, etc.)
+│
+├── /genesis-block/           # Hand-crafted JSON SoR files (Task 1.2)
+│
+├── /nextjs-cockpit/          # The Next.js application
+│   ├── /convex/              # Convex schema and functions (Task 1.3)
+│   ├── package.json          # <-- Modify the 'dev' script here
+│   ├── .env.local            # <-- Will contain Convex/Flowise keys
+│
+├── /n8n-workflows/           # JSON exports of n8n workflows
+├── /flowise-brains/          # JSON exports of FlowiseAI chains
+│
+├── /qdrant-storage/          # Persistent volume data
+├── /n8n-data/                # Persistent volume data
+├── /flowise-data/            # Persistent volume data
+├── /postgres-data/           # Persistent volume data
+│
+└── README.md
+```
+
+---
+
+## ⚙️ Prerequisites
+
+Before you begin, ensure you have the following installed on your workstation:
+
+- **git**
+- **Node.js** (v18+ recommended)
+- **pnpm** (we will use pnpm for this project)
+- **Docker & Docker Compose**
+
+It is also assumed you have a global **Ollama** service running on `http://localhost:11434`.
+
+---
+
+## 🚀 Get Started: Step-by-Step
+
+### 1️⃣ Clone & Setup Folders
+
+```bash
+# Clone your repository
 git clone <your-repo-url>
 cd ctfy-decision-os
 
 # Create directories for Docker persistent volumes
 mkdir qdrant-storage n8n-data flowise-data postgres-data
 
-# Create folders for our project structure
+# Create folders for project structure
 mkdir genesis-block nextjs-cockpit n8n-workflows flowise-brains
+```
 
-2. Infrastructure: Docker ServicesCopy the content from the docker-compose.yml artifact (which we created earlier) into a docker-compose.yml file in the root of this project.Then, start all project-specific services.# Start all services defined in the docker-compose.yml
+---
+
+### 2️⃣ Infrastructure: Docker Services
+
+Copy the content from the `docker-compose.yml` artifact (created earlier) into a file in the root of this project.
+
+Then, start all project-specific services:
+
+```bash
+# Start all services
 docker-compose up -d
 
-# Verify that all containers are running
+# Verify containers are running
 docker-compose ps
-# You should see 4 services: qdrant_project, n8n_project, flowise_project, postgres_project
+# You should see: qdrant_project, n8n_project, flowise_project, postgres_project
+```
 
-3. Application: Next.js & Convex SetupNow, we set up the Next.js cockpit and link it to our Convex cloud backend.# Navigate into the cockpit directory
+---
+
+### 3️⃣ Application: Next.js & Convex Setup
+
+```bash
+# Navigate into the cockpit directory
 cd nextjs-cockpit
 
-# Initialize a new Next.js project in the current folder
-# (Answer 'Yes' to all prompts - TypeScript, ESLint, Tailwind, App Router)
+# Initialize a new Next.js project
 npx create-next-app@latest .
 
 # Install dependencies
@@ -50,32 +105,81 @@ pnpm install
 # Install Convex
 pnpm add convex
 
-# Initialize Convex
-# This will open your browser to log in/register
-# and link this folder to a new Convex project.
+# Initialize Convex (links folder to new Convex project)
 npx convex init
+```
 
-4. Application: ConfigurationThis is a critical step to ensure all services can talk to each other.A. Configure Next.js Port (CRITICAL)Your global services use ports 3000 (Flowise) and our project services use 3001 (Flowise). pnpm run dev will try to use 3000 or 3001 and fail.We must assign a unique, free port.Open /nextjs-cockpit/package.json.Find the "scripts" section.Modify the "dev" script to run on port 3005 (or any other free port):"scripts": {
+---
+
+### 4️⃣ Application Configuration
+
+#### A. Configure Next.js Port (⚠️ Critical)
+
+Your global services use ports 3000/3001, so change the default port.
+
+In `/nextjs-cockpit/package.json`, modify the **dev** script:
+
+```json
+"scripts": {
   "dev": "next dev -p 3005",
   "build": "next build",
   "start": "next start",
   "lint": "next lint"
-},
+}
+```
 
-B. Create .env.local FileYour Next.js app needs to know its Convex URL (generated by npx convex init) and its Flowise URL (from Docker).Create a file: /nextjs-cockpit/.env.localAdd the following variables. Get the Convex URL from your Convex project dashboard (or the output of npx convex init).# Convex URLs (Get this from your Convex dashboard)
-NEXT_PUBLIC_CONVEX_URL=https://<your-project-name>.convex.cloud
+#### B. Create `.env.local` File
 
-# Flowise Project URL (from our docker-compose.yml)
+Create `/nextjs-cockpit/.env.local`:
+
+```bash
+# Convex URL (from your Convex dashboard)
+NEXT_PUBLIC_CONEX_URL=https://<your-project-name>.convex.cloud
+
+# Flowise Project URL (from docker-compose.yml)
 NEXT_PUBLIC_FLOWISE_URL=http://localhost:3001
+```
 
-5. Running the Full SystemYou need 3 terminals running simultaneously.Terminal 1 (Root): Docker# (If not already running from Step 2)
+---
+
+### 5️⃣ Running the Full System
+
+You need **three terminals** running simultaneously.
+
+#### Terminal 1 – Root: Docker
+
+```bash
 cd /path/to/ctfy-decision-os
 docker-compose up
+```
 
-Terminal 2 (Cockpit): Convex DevThis terminal watches your /convex folder for changes and pushes them to the cloud.cd /path/to/ctfy-decision-os/nextjs-cockpit
+#### Terminal 2 – Cockpit: Convex Dev
+
+```bash
+cd nextjs-cockpit
 npx convex dev
+```
 
-Terminal 3 (Cockpit): Next.js AppThis terminal runs your local frontend.cd /path/to/ctfy-decision-os/nextjs-cockpit
+#### Terminal 3 – Cockpit: Next.js App
+
+```bash
+cd nextjs-cockpit
 pnpm run dev
+```
 
-6. Access Ports (Quick Reference)You can now access all your running services:| Service | Host Port (External) | Internal (Docker) Port | Notes || Next.js App | http://localhost:3005 | - | Your main UI || FlowiseAI | http://localhost:3001 | 3000 | Project-specific RAG chains || n8n | http://localhost:5683 | 5678 | Project-specific ETL workflows || Qdrant | http://localhost:6334 | 6333 | Project-specific vector store || Postgres | http://localhost:5433 | 5432 | Project-specific DB (for n8n/Flowise) || Ollama | http://localhost:11434 | - | Global service (on Host) |
+---
+
+## 🌐 Access Ports (Quick Reference)
+
+| Service       | Host Port               | Internal Port | Notes                            |
+|----------------|-------------------------|----------------|-----------------------------------|
+| Next.js App    | http://localhost:3005   | -              | Main UI                           |
+| FlowiseAI      | http://localhost:3001   | 3000           | Project-specific RAG chains       |
+| n8n            | http://localhost:5683   | 5678           | Project-specific ETL workflows    |
+| Qdrant         | http://localhost:6334   | 6333           | Project-specific vector store     |
+| Postgres       | http://localhost:5433   | 5432           | DB for n8n/Flowise                |
+| Ollama         | http://localhost:11434  | -              | Global service (on Host)          |
+
+---
+
+© 2025 **Codetechify Project** – Decision-Lifecycle OS Prototype

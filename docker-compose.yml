@@ -1,0 +1,60 @@
+# Docker Compose setup for the "Tracer RAG Backbone" project
+
+version: '3.8'
+
+services:
+  qdrant_project:
+    image: qdrant/qdrant
+    ports:
+      # Your global Qdrant might run on 6333.
+      # Our project-Qdrant will run on 6334.
+      - "6335:6333"
+    volumes:
+      - ./qdrant-storage:/qdrant/storage
+    restart: always
+
+  n8n_project:
+    image: n8nio/n8n
+    ports:
+      # Your global n8n might run on 5682.
+      # Our project-n8n will run on 5683.
+      - "5683:5678" # (Note: n8n's internal port is 5678)
+    environment:
+      # IMPORTANT: Connecting to the "global" Ollama on the host machine
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+    restart: always
+
+  flowise_project:
+    image: flowiseai/flowise
+    ports:
+      # Your global Flowise might run on 3000.
+      # Our project-Flowise will run on 3001.
+      - "3001:3000"
+    environment:
+      # Flowise also needs to know where Ollama is on the host
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    volumes:
+      - ./flowise-data:/root/.flowise
+    restart: always
+
+  postgres_project:
+    image: postgres:16
+    ports:
+      # Your global Postgres might run on 5432.
+      # Our project-Postgres will run on 5433.
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=project_db
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  qdrant-storage:
+  n8n-data:
+  flowise-data:
+  postgres-data:
